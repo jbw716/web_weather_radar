@@ -7,10 +7,11 @@
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
         integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js"></script>
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js"></script>
 
     <style>
         #map {
@@ -18,102 +19,34 @@
             width: 100vw;
         }
 
-        #control {
-            width: 30vw;
-            height: 10vh;
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            z-index: 1000;
-            background-color: white;
-            border: 1px solid black;
-            border-radius: 1px;
-            padding: 10px;
-        }
-
         body {
             margin: 0;
-        }
-
-        #timeControl {
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-        }
-
-        #timeValue {
-            margin: 0;
-            padding: 0.25em;
-        }
-
-        #timeButton {
-            padding: 0.25em;
-            font-size: 1.5em;
-            cursor: pointer;
         }
     </style>
 </head>
 
 <body>
-    <div id="control">
-        <label for="timeControl" class="form-label">Time</label>
-        <div id="timeControl">
-            <i id="timeButton" class="bi bi-play-circle"></i>
-            <input type="range" class="form-range" min="1" max="5" id="timeSlider">
-            <p id="timeValue"></p>
-        </div>
-    </div>
     <div id="map"></div>
     <script>
-
-        var time;
-        var timeInterval;
-        var timeSlider = document.getElementById("timeSlider");
-        var timeButton = document.getElementById("timeButton");
-        var timeValue = document.getElementById("timeValue");
-
-        var setSliderValue = (value) => {
-            time = value;
-            timeSlider.value = time;
-            timeValue.innerHTML = time;
-            console.log(timeSlider.value);
-        }
-
-        setSliderValue(5);
-
-        var incrementTime = () => {
-            if (time < 5) {
-                setSliderValue(time + 1);
-            } else {
-                setSliderValue(1);
-            }
-        }
-
-        var play = () => {
-            timeButton.classList.remove("bi-play-circle");
-            timeButton.classList.add("bi-pause-circle");
-            timeButton.onclick = pause;
-            timeInterval = setInterval(incrementTime, 1000);
-        }
-
-        var pause = () => {
-            timeButton.classList.remove("bi-pause-circle");
-            timeButton.classList.add("bi-play-circle");
-            timeButton.onclick = play;
-            clearInterval(timeInterval);
-        }
-
-        timeSlider.oninput = () => {
-            setSliderValue(timeSlider.value);
-        }
-
-        timeButton.onclick = play;
-
         var map = L.map('map', {
             center: [39.5, -98.35],
             zoom: 5,
             maxZoom: 15,
-            minZoom: 5
+            minZoom: 5,
+            timeDimension: true,
+            timeDimensionOptions: {
+
+            },
+            timeDimensionControl: true,
+            timeDimensionControlOptions: {
+                // minSpeed: 9.0,
+                speedSlider: false,
+                playerOptions: {
+                    transitionTime: 100,
+                    loop: true,
+                    startOver: true,
+                }
+            }
         });
 
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -121,30 +54,42 @@
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
+        var wmsTimeOptions = {
+            cache: 60,
+            wmsVersion: '1.3.0'
+        }
+
         // This is the start of what radar.weather.gov uses.
-        var wmsConusLayer = L.tileLayer.wms('https://opengeo.ncep.noaa.gov/geoserver/conus/conus_bref_qcd/ows?', {
+        var wmsConusLayer = L.tileLayer.wms('https://opengeo.ncep.noaa.gov/geoserver/conus/conus_bref_qcd/ows', {
             version: '1.3.0',
             format: 'image/png',
             opacity: 0.6,
             transparent: true,
             layers: 'conus_bref_qcd',
-        }).addTo(map);
-        var wmsAlaskaLayer = L.tileLayer.wms('https://opengeo.ncep.noaa.gov/geoserver/alaska/alaska_bref_qcd/ows?', {
+        });
+        var tdWmsConusLayer = L.timeDimension.layer.wms(wmsConusLayer, wmsTimeOptions);
+        tdWmsConusLayer.addTo(map);
+
+        var wmsAlaskaLayer = L.tileLayer.wms('https://opengeo.ncep.noaa.gov/geoserver/alaska/alaska_bref_qcd/ows', {
             version: '1.3.0',
             format: 'image/png',
             opacity: 0.6,
             transparent: true,
             layers: 'alaska_bref_qcd',
-        }).addTo(map);
-        var wmsCaribLayer = L.tileLayer.wms('https://opengeo.ncep.noaa.gov/geoserver/carib/carib_bref_qcd/ows?', {
+        });
+        var tdWmsAlaskaConusLayer = L.timeDimension.layer.wms(wmsAlaskaLayer, wmsTimeOptions);
+        tdWmsAlaskaConusLayer.addTo(map);
+
+        var wmsCaribLayer = L.tileLayer.wms('https://opengeo.ncep.noaa.gov/geoserver/carib/carib_bref_qcd/ows', {
             version: '1.3.0',
             format: 'image/png',
             opacity: 0.6,
             transparent: true,
             layers: 'carib_bref_qcd',
-        }).addTo(map);
+        });
+        var tdWmsCaribConusLayer = L.timeDimension.layer.wms(wmsCaribLayer, wmsTimeOptions);
+        tdWmsCaribConusLayer.addTo(map);
         // This is the end of what radar.weather.gov uses.
-
 
         // var wmsLayer = L.tileLayer.wms('https://idpgis.ncep.noaa.gov/arcgis/services/NWS_Observations/radar_base_reflectivity/MapServer/WmsServer?', {
         //     // version: '1.3.0',
@@ -160,9 +105,6 @@
         //     layers: '1',
         // }).addTo(map);
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-        crossorigin="anonymous"></script>
 </body>
 
 </html>
