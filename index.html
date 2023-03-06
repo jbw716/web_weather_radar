@@ -29,7 +29,7 @@
     <div id="map"></div>
     <script>
         var today = new Date();
-        var fiveMinutesAgo = new Date(today.getTime() - 5*60*1000);
+        var fifteenMinutesAgo = new Date(today.getTime() - 15*60*1000);
         var map = L.map('map', {
             center: [39.5, -98.35],
             zoom: 5,
@@ -37,16 +37,16 @@
             minZoom: 5,
             timeDimension: true,
             timeDimensionOptions: {
-                timeInterval: "PT1H30M/" + fiveMinutesAgo.toISOString(),
+                timeInterval: "PT1H30M/" + fifteenMinutesAgo.toISOString(),
                 period: "PT5M",
-                currentTime: fiveMinutesAgo,
+                currentTime: fifteenMinutesAgo,
             },
             timeDimensionControl: true,
             timeDimensionControlOptions: {
                 speedSlider: false,
                 timeZones: ["Local"],
                 playerOptions: {
-                    transitionTime: 100,
+                    transitionTime: 250,
                     loop: true,
                     startOver: true,
                 }
