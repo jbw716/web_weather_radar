@@ -28,18 +28,22 @@
 <body>
     <div id="map"></div>
     <script>
+        // var today = new Date();
+        // var oneHourAgo = new Date(today.getTime() - (60 * 60 * 1000));
+
         var map = L.map('map', {
             center: [39.5, -98.35],
             zoom: 5,
             maxZoom: 15,
             minZoom: 5,
             timeDimension: true,
-            timeDimensionOptions: {
-
-            },
+            // timeDimensionOptions: {
+            //     timeInterval: oneHourAgo.toISOString() + "/" + today.toISOString(),
+            // },
             timeDimensionControl: true,
             timeDimensionControlOptions: {
                 speedSlider: false,
+                timeZones: ["Local"],
                 playerOptions: {
                     transitionTime: 100,
                     loop: true,
